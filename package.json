@@ -1,0 +1,29 @@
+{
+  "name": "rapid-browser",
+  "version": "1.0.0",
+  "description": "Simple, fast and easy browser.",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "browser",
+    "rapid"
+  ],
+  "author": "LOAD",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3",
+    "electron": "^28.2.3"
+  },
+  "build": {
+    "appId": "com.load.rapid",
+    "win": {
+      "target": "nsis"
+    },
+    "icon": "logo.ico"
+  }
+}

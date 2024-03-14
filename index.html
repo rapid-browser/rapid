@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rapid Browser</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="topbar">
+        <div id="tabs-container">
+            <!-- Tabs will be dynamically added here -->
+            <i class="fas fa-plus" id="add-tab"></i>
+        </div>
+        <div id="window-controls">
+            <button id="minimize-btn"><i class="fas fa-window-minimize"></i></button>
+            <button id="maximize-btn"><i class="fas fa-window-maximize"></i></button>
+            <button id="close-btn"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div id="app-content">
+        <div class="app-topbar">
+            <button id="go-back"><i class="fas fa-arrow-left"></i></button>
+            <button id="go-forward"><i class="fas fa-arrow-right"></i></button>
+            <button id="refresh-page"><i class="fas fa-redo"></i></button>
+            <input type="text" id="url-bar" placeholder="Enter URL here">
+            <button id="open-settings"><i class="fas fa-cog"></i></button>
+        </div>
+        <!-- webviews will be added dynamically here -->
+    </div>
+    <script>
+$(document).ready(function() {
+
+    $('#url-bar').on('focus', function() {
+        $(this).select(); // Automatically select all content
+    });
+
+    function updateFavicon(tabId, url) {
+        const faviconUrl = `https://www.google.com/s2/favicons?domain=${url}`;
+        $('#' + tabId + ' .tab-icon').attr('src', faviconUrl);
+    }
+
+    function createNewTab(url) {
+        const tabCount = $('.tab').length + 1;
+        const tabId = `tab${tabCount}`;
+        const webviewId = `webview${tabCount}`;
+
+        // Create and append the new tab
+        $('<div class="tab" id="' + tabId + '" data-url="' + url + '" draggable="true">' +
+            '<img src="https://www.google.com/s2/favicons?domain=' + url + '" class="tab-icon">' +
+            '<p class="tab-title">Loading...</p>' +
+            '<i class="fas fa-times close-tab"></i>' +
+          '</div>').insertBefore('#add-tab');
+
+        $('.tab').removeClass('selected');
+        $('#' + tabId).addClass('selected');
+
+        const webviewElement = $('<webview>', {
+            id: webviewId,
+            "class": 'website-content',
+            src: url,
+        }).appendTo('#app-content').show()[0];
+
+        webviewElement.addEventListener('dom-ready', function() {
+            this.executeJavaScript('document.title').then((title) => {
+                $('#' + tabId + ' .tab-title').text(title);
+            });
+        });
+
+        webviewElement.addEventListener('did-fail-load', (e) => {
+            if (e.errorCode !== -3) {
+                handleLoadFailure(webviewElement);
+            }
+        });
+
+        webviewElement.addEventListener('did-navigate', function(e) {
+            const newUrl = e.url;
+            $('#' + tabId).attr('data-url', newUrl); // Update data-url on navigation
+            updateFavicon(tabId, newUrl); // Update favicon
+            if ($('#' + tabId).hasClass('selected')) {
+                $('#url-bar').val(e.url); // Update the URL bar with the new URL
+            }
+        });
+
+        attachTabEventHandlers();
+    }
+
+    function attachTabEventHandlers() {
+        // Handle clicking on a tab
+        $('.tab').off('click').on('click', function() {
+            const tabId = $(this).attr('id');
+            switchTab(tabId);
+        });
+
+        // Handle closing a tab
+        $('.close-tab').off('click').on('click', function(e) {
+            e.stopPropagation();
+            const tabId = $(this).closest('.tab').attr('id');
+            closeTab(tabId);
+        });
+    }
+
+    function switchTab(tabId) {
+        // Deselect all tabs and hide all webviews
+        $('.tab').removeClass('selected');
+        $('.website-content').hide();
+
+        // Select the new tab and show its webview
+        $('#' + tabId).addClass('selected');
+        const webviewId = 'webview' + tabId.replace('tab', '');
+        $('#' + webviewId).show();
+
+        // Update the URL bar to reflect the newly activated webview's URL
+        const activeWebview = document.getElementById(webviewId);
+        if (activeWebview) {
+            const currentUrl = activeWebview.getURL();
+            $('#url-bar').val(currentUrl); // Set the URL bar to the current URL of the active webview
+        }
+    }
+
+
+
+
+    function closeTab(tabId) {
+        $('#' + tabId).remove();
+        $('#webview' + tabId.replace('tab', '')).remove();
+        if ($('.tab').length > 0) {
+            switchTab($('.tab').last().attr('id'));
+        } else {
+            window.electron.closeApp(); // Close the app if no tabs are left
+        }
+    }
+
+    function getActiveWebview() {
+        // Assuming each tab's ID matches its webview ID like 'tab1' => 'webview1'
+        const activeTabId = $('.tab.selected').attr('id');
+        if (!activeTabId) return null;
+
+        const webviewId = 'webview' + activeTabId.replace('tab', '');
+        return document.getElementById(webviewId);
+    }
+
+    $('#add-tab').click(function() {
+        createNewTab('https://google.com');
+    });
+
+    $('#go-back').click(function() {
+        const webview = getActiveWebview();
+        if (webview) webview.goBack();
+    });
+
+    $('#go-forward').click(function() {
+        const webview = getActiveWebview();
+        if (webview) webview.goForward();
+    });
+
+    $('#refresh-page').click(function() {
+        const webview = getActiveWebview();
+        if (webview) webview.reload();
+    });
+
+    $('#url-bar').on('keyup', function(e) {
+        if (e.key === 'Enter') {
+            let input = $(this).val().trim();
+            let url;
+
+            if (input.match(/^[a-zA-Z]+:\/\/.+/)) {
+                url = input;
+            } else {
+                url = `https://www.google.com/search?q=${encodeURIComponent(input)}&client=Rapid`;
+            }
+
+            const webview = getActiveWebview();
+            if (webview) {
+                webview.src = url;
+            }
+        }
+    });
+
+
+    // Handling URL changes and setting it to the URL bar
+    $('webview').on('did-navigate', function(e) {
+        $('#url-bar').val(e.url);
+    });
+
+    // Initially create the first tab
+    createNewTab('https://google.com');
+});
+    
+        // Existing script for window controls
+        window.electron.closeApp = () => window.electron.closeApp();
+        window.electron.minimizeApp = () => window.electron.minimizeApp();
+        window.electron.maximizeApp = () => window.electron.maximizeApp();
+        window.electron.openSettings = () => window.electron.openSettings()
+    
+        document.getElementById('close-btn').addEventListener('click', () => {
+            window.electron.closeApp();
+        });
+    
+        document.getElementById('minimize-btn').addEventListener('click', () => {
+            window.electron.minimizeApp();
+        });
+    
+        document.getElementById('maximize-btn').addEventListener('click', () => {
+            window.electron.maximizeApp();
+        });
+
+        document.getElementById('open-settings').addEventListener('click', () => {
+            window.electron.openSettings();
+        });
+
+// DRAGGING
+let draggedTabIndex = null;
+
+// Bind events on dynamic elements
+$(document).on('dragstart', '.tab', function(event) {
+    draggedTabIndex = $(this).index(); // Store the index of the dragged tab
+    event.originalEvent.dataTransfer.setData('text/plain', null); // Needed for Firefox
+});
+
+$(document).on('dragover', '#tabs-container .tab', function(event) {
+    event.preventDefault(); // Allow dropping
+});
+
+$(document).on('drop', '#tabs-container .tab', function(event) {
+    event.preventDefault();
+    var targetTabIndex = $(this).index();
+    if (draggedTabIndex !== null && targetTabIndex !== draggedTabIndex) {
+        moveTab(draggedTabIndex, targetTabIndex);
+    }
+});
+
+function moveTab(fromIndex, toIndex) {
+    var $tabs = $('#tabs-container .tab');
+    var $movingTab = $tabs.eq(fromIndex);
+    
+    if (fromIndex < toIndex) {
+        $movingTab.insertAfter($tabs.eq(toIndex));
+    } else {
+        $movingTab.insertBefore($tabs.eq(toIndex));
+    }
+    
+    // Adjust webviews or associated content accordingly
+    // This part depends on how your webviews are linked to tabs
+}
+    </script>
+</body>
+</html>

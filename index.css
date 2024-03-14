@@ -1,0 +1,183 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: rgb(2,0,36);
+    background: linear-gradient(180deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 66%, rgba(23,0,255,1) 100%);
+}
+
+#topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* This ensures items are spaced out */
+    height: 55px;
+    background: none;
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
+    width: 100%;
+    padding: 0 0px; /* Adjusted padding for the entire topbar */
+    overflow: hidden;
+}
+
+#tabs-container {
+    display: flex;
+    align-items: center;
+    -webkit-app-region: no-drag;
+    overflow-x: auto; /* Allows horizontal scrolling for tabs if needed */
+    overflow-y: hidden; /* Prevents vertical scrollbar */
+    white-space: nowrap; /* Prevent tabs from wrapping */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    padding-left: 5px;
+}
+
+#tabs-container::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari */
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    min-width: 200px;
+    max-width: 200px;
+    height: 35px;
+    color: white;
+    padding: 0 10px;
+    border-radius: 10px;
+    margin-right: 5px;
+    position: relative;
+    -webkit-app-region: no-drag;
+    transition: 0.3s;
+}
+
+.tab-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    background: none;
+}
+
+.tab-title {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 15px;
+    position: relative;
+    max-width: calc(100% - 40px);
+}
+
+.close-tab {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+}
+
+.tab:hover .close-tab, .tab.selected .close-tab {
+    opacity: 1;
+}
+
+#window-controls {
+    display: flex;
+    align-items: center;
+}
+
+#window-controls button {
+    width: 55px;
+    height: 55px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-app-region: no-drag;
+    transition: background-color 0.3s ease;
+}
+
+#window-controls button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#window-controls #close-btn:hover {
+    background-color: #E81123;
+}
+
+#window-controls button i {
+    pointer-events: none;
+}
+
+.tab.selected {
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: 0.1s;
+}
+
+#app-content {
+    position: relative; /* If not already positioned */
+    height: calc(100vh - 55px); /* Adjust the height as per your topbar height */
+    width: 100%;
+}
+
+#add-tab {
+    font-size: 24px; /* Adjust the size of the plus icon */
+    color: white; /* Icon color */
+    cursor: pointer; /* Change cursor to pointer to indicate it's clickable */
+    padding: 5px 7px; /* Padding around the icon for easier clicking */
+    margin-left: 5px; /* Space between the last tab and the add-tab icon */
+    border-radius: 50%; /* Rounded corners for the hover effect background */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition for the hover effect */
+    -webkit-app-region: no-drag;
+}
+
+#add-tab:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Slight background color on hover for feedback */
+}
+
+/* APP THINGS */
+
+.app-topbar {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: #333; /* Dark background for the navigation section */
+    color: white;
+    top: 10px;
+}
+
+.app-topbar button {
+    background: none;
+    padding: 10px 10px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.app-topbar button:hover {
+    background: #484848;
+    transition: 0.3s;
+}
+
+.app-topbar #url-bar {
+    flex-grow: 1;
+    padding: 5px;
+    margin: 0 10px;
+    color: white;
+    background-color: #222; /* Darker than the app-topbar */
+    border: none; /* Removes border */
+    border-radius: 10px;
+    outline: none; /* Removes the default outline */
+}
+
+.website-content {
+    background-color: white;
+    position: absolute;
+    top: 45px; /* Adjusted to accommodate the app-topbar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
